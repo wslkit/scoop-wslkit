@@ -1,0 +1,94 @@
+# Keeps bucket/wslkit.json pointing at the latest wslkit release.
+#
+# This runs here rather than being pushed from wslkit's own release workflow so
+# that no cross-repository token is needed: this repository's GITHUB_TOKEN can
+# write to this repository, and nothing else has to be trusted with anything.
+# The cost is up to an hour's delay, which for a Scoop bucket is nobody's
+# emergency.
+name: update
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: rewrite the manifest for the latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(gh release view --repo wslkit/wslkit --json tagName -q .tagName | sed 's/^v//')
+          if [ -z "$version" ]; then
+            echo "no release found"; exit 1
+          fi
+          current=$(jq -r .version bucket/wslkit.json 2>/dev/null || echo "")
+          if [ "$version" = "$current" ]; then
+            echo "already at $version"; exit 0
+          fi
+
+          base="https://github.com/wslkit/wslkit/releases/download/v${version}"
+          # The checksums file is the release's own record of what it built, so
+          # the hashes in the manifest are the publisher's rather than
+          # something this workflow computed from a download it might have got
+          # wrong.
+          curl -fsSL "$base/checksums.txt" -o checksums.txt
+          hash_for() { grep " $1\$" checksums.txt | cut -d' ' -f1; }
+
+          amd64_zip="wslkit_${version}_windows_amd64.zip"
+          arm64_zip="wslkit_${version}_windows_arm64.zip"
+          amd64_hash=$(hash_for "$amd64_zip")
+          arm64_hash=$(hash_for "$arm64_zip")
+          if [ -z "$amd64_hash" ] || [ -z "$arm64_hash" ]; then
+            echo "a checksum is missing from checksums.txt"; cat checksums.txt; exit 1
+          fi
+
+          jq -n --arg v "$version" \
+                --arg au "$base/$amd64_zip" --arg ah "$amd64_hash" \
+                --arg ru "$base/$arm64_zip" --arg rh "$arm64_hash" '
+          {
+            version: $v,
+            description: "Tools for WSL 2: diagnose why it is broken or slow, then fix it.",
+            homepage: "https://github.com/wslkit/wslkit",
+            license: "MIT",
+            notes: [
+              "The binaries are not Authenticode-signed yet, so SmartScreen may warn on first run.",
+              "wslkit and wsldoctor are the same binary: invoked as wsldoctor it runs wslkit doctor."
+            ],
+            architecture: {
+              "64bit": { url: $au, hash: $ah },
+              arm64:   { url: $ru, hash: $rh }
+            },
+            bin: [["wslkit.exe", "wslkit"], ["wslkit.exe", "wsldoctor"]],
+            checkver: { github: "https://github.com/wslkit/wslkit" },
+            autoupdate: {
+              architecture: {
+                "64bit": { url: "https://github.com/wslkit/wslkit/releases/download/v$version/wslkit_$version_windows_amd64.zip" },
+                arm64:   { url: "https://github.com/wslkit/wslkit/releases/download/v$version/wslkit_$version_windows_arm64.zip" }
+              },
+              hash: { url: "https://github.com/wslkit/wslkit/releases/download/v$version/checksums.txt" }
+            }
+          }' > bucket/wslkit.json
+          rm -f checksums.txt
+          echo "updated to $version"
+
+      - name: commit
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "nothing changed"; exit 0
+          fi
+          version=$(jq -r .version bucket/wslkit.json)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/wslkit.json
+          git commit -m "wslkit ${version}"
+          git push

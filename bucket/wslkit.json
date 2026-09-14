@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "description": "Tools for WSL 2: diagnose why it is broken or slow, then fix it.",
+  "homepage": "https://github.com/wslkit/wslkit",
+  "license": "MIT",
+  "notes": [
+    "The binaries are not Authenticode-signed yet, so SmartScreen may warn on first run.",
+    "wslkit and wsldoctor are the same binary: invoked as wsldoctor it runs wslkit doctor."
+  ],
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/wslkit/wslkit/releases/download/v0.1.0/wslkit_0.1.0_windows_amd64.zip",
+      "hash": "150832865c882e0670060af1d2563cd09949e0fc97a340c0243f6f19365e46ab"
+    },
+    "arm64": {
+      "url": "https://github.com/wslkit/wslkit/releases/download/v0.1.0/wslkit_0.1.0_windows_arm64.zip",
+      "hash": "50a2dfffd16dcf8dcc61243a8622ad6efb08a42bf07b224ab4ac813fe2dfdb98"
+    }
+  },
+  "bin": [
+    ["wslkit.exe", "wslkit"],
+    ["wslkit.exe", "wsldoctor"]
+  ],
+  "checkver": {
+    "github": "https://github.com/wslkit/wslkit"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/wslkit/wslkit/releases/download/v$version/wslkit_$version_windows_amd64.zip"
+      },
+      "arm64": {
+        "url": "https://github.com/wslkit/wslkit/releases/download/v$version/wslkit_$version_windows_arm64.zip"
+      }
+    },
+    "hash": {
+      "url": "https://github.com/wslkit/wslkit/releases/download/v$version/checksums.txt"
+    }
+  }
+}
