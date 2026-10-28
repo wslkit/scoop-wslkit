@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Tools for WSL 2: diagnose why it is broken or slow, then fix it.",
   "homepage": "https://github.com/wslkit/wslkit",
   "license": "MIT",
@@ -9,12 +9,12 @@
   ],
   "architecture": {
     "64bit": {
-      "url": "https://github.com/wslkit/wslkit/releases/download/v0.2.0/wslkit_0.2.0_windows_amd64.zip",
-      "hash": "66acd9c2f273581dd3623df8b28d19659095fc88680a068bfd7bcb844b1f7207"
+      "url": "https://github.com/wslkit/wslkit/releases/download/v0.3.0/wslkit_0.3.0_windows_amd64.zip",
+      "hash": "419b76cb16769d4d606d55d150aaef55aaa392e2bdc66e73dab2c74c3f8077f4"
     },
     "arm64": {
-      "url": "https://github.com/wslkit/wslkit/releases/download/v0.2.0/wslkit_0.2.0_windows_arm64.zip",
-      "hash": "4d26cef1309db917c2948e46ea4b334509e01302e268d710d27df1f2369a38d2"
+      "url": "https://github.com/wslkit/wslkit/releases/download/v0.3.0/wslkit_0.3.0_windows_arm64.zip",
+      "hash": "216c61925f9d45346dfe991d7b694318ac277cf662237a8008cc261bfde221a7"
     }
   },
   "bin": [
